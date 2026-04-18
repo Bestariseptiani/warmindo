@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manajemen Meja</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>🍜 Warmindo</h2>
+
+      <ul>
+        <li onclick="goTo('dashboard')">Dashboard</li>
+        <li class="active" onclick="goTo('meja')">Meja</li>
+        <li onclick="goTo('laporan')">Laporan</li>
+      </ul>
+
+      <button onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main">
+      <h2>📊 Table & QR Management</h2>
+      <p class="page-desc">Kelola QR meja dan konfirmasi pembayaran per meja.</p>
+
+      <input type="text" placeholder="Cari meja..." id="searchMeja" onkeyup="renderMeja()" />
+
+      <div class="stats" id="mejaSummary"></div>
+
+      <div class="meja-grid" id="mejaContainer"></div>
+    </main>
+  </div>
+
+  <script src="/views/admin/meja.js"></script>
+</body>
+</html>

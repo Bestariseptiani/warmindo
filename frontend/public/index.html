@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warmindo</title>
+
+  <!-- FIX CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <h2>Warmindo</h2>
+  <div class="meja-info" id="mejaInfo">Meja #1</div>
+</header>
+
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Cari menu..." onkeyup="cariMenu()">
+</div>
+
+<nav class="kategori">
+  <button onclick="filterMenu('all', this)" class="active">Menu</button>
+  <button onclick="filterMenu('indomie', this)">Indomie</button>
+  <button onclick="filterMenu('minuman', this)">Minuman</button>
+  <button onclick="filterMenu('snack', this)">Snack</button>
+</nav>
+
+<main class="grid-menu"></main>
+
+<footer>
+  <button class="cart" onclick="bukaKeranjang()">🛒 Lihat Keranjang</button>
+</footer>
+
+<!-- FIX JS -->
+<script src="/js/script.js"></script>
+
+</body>
+</html>

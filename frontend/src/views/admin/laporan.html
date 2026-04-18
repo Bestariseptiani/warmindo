@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laporan Pesanan</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>🍜 Warmindo</h2>
+
+      <ul>
+        <li onclick="goTo('dashboard')">Dashboard</li>
+        <li onclick="goTo('meja')">Meja</li>
+        <li class="active" onclick="goTo('laporan')">Laporan</li>
+      </ul>
+
+      <button onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main">
+      <h2>📑 Laporan & Riwayat Order</h2>
+
+      <div class="laporan-toolbar">
+        <input
+          type="text"
+          id="searchLaporan"
+          placeholder="Cari nama menu / status..."
+          onkeyup="renderLaporan()"
+        />
+
+        <input
+          type="date"
+          id="filterTanggal"
+          onchange="renderLaporan()"
+        />
+
+        <input
+          type="month"
+          id="filterBulan"
+          onchange="renderLaporan()"
+        />
+
+        <button class="filter-reset-btn" onclick="resetFilter()">Reset Filter</button>
+      </div>
+
+      <div class="stats laporan-stats">
+        <div class="card">
+          <p>Total Order</p>
+          <h2 id="lapTotalOrder">0</h2>
+        </div>
+        <div class="card">
+          <p>Total Qty</p>
+          <h2 id="lapTotalQty">0</h2>
+        </div>
+        <div class="card">
+          <p>Total Pendapatan</p>
+          <h2 id="lapTotalPendapatan">Rp 0</h2>
+        </div>
+        <div class="card">
+          <p>Order Selesai</p>
+          <h2 id="lapTotalSelesai">0</h2>
+        </div>
+      </div>
+
+      <div class="laporan-table-wrapper">
+        <table class="laporan-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>Menu</th>
+              <th>Qty</th>
+              <th>Harga</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="laporanBody"></tbody>
+        </table>
+      </div>
+
+      <!-- RINGKASAN BAWAH -->
+      <div class="laporan-summary-section">
+        <div class="summary-card laporan-summary-card">
+          <h3>📅 Total Pendapatan per Hari</h3>
+          <div id="summaryPerHari" class="summary-list"></div>
+        </div>
+
+        <div class="summary-card laporan-summary-card">
+          <h3>📆 Total Pendapatan per Bulan</h3>
+          <div id="summaryPerBulan" class="summary-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/views/admin/laporan.js"></script>
+</body>
+</html>

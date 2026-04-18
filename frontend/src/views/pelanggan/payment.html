@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pembayaran</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>Metode Pembayaran</h2>
+
+  <div class="summary-card">
+    <h3>Total Pembayaran</h3>
+    <h2 id="totalBayar">Rp 0</h2>
+  </div>
+
+  <div class="payment-list">
+    <div class="payment-card" onclick="pilihMetode('kasir')">
+      Bayar di Kasir
+    </div>
+
+    <div class="payment-card" onclick="pilihMetode('qris')">
+      QRIS
+    </div>
+  </div>
+
+  <div id="detailPembayaran"></div>
+</div>
+
+<script src="/views/pelanggan/payment.js"></script>
+</body>
+</html>

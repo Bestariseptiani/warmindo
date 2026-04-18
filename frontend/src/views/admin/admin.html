@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>🍜 Warmindo</h2>
+
+      <ul>
+        <li class="active" onclick="goTo('dashboard')">Dashboard</li>
+        <li onclick="goTo('meja')">Meja</li>
+        <li onclick="goTo('laporan')">Laporan</li>
+      </ul>
+
+      <button onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <input
+          type="text"
+          placeholder="Cari pesanan..."
+          id="searchInput"
+          onkeyup="cariPesanan()"
+        />
+      </div>
+
+      <div class="stats">
+        <div class="card"><p>Antrian</p><h2 id="statAntrian">0</h2></div>
+        <div class="card"><p>Dimasak</p><h2 id="statMasak">0</h2></div>
+        <div class="card"><p>Siap Saji</p><h2 id="statSiap">0</h2></div>
+        <div class="card"><p>Selesai</p><h2 id="statSelesai">0</h2></div>
+      </div>
+
+      <h3>🔥 Pesanan Masuk</h3>
+      <div class="orders" id="orderList"></div>
+    </main>
+  </div>
+
+  <script src="/views/admin/admin.js"></script>
+</body>
+</html>

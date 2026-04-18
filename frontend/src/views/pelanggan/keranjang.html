@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keranjang</title>
+
+  <!-- FIX CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <h2>🛒 Review Pesanan</h2>
+
+  <div id="listKeranjang"></div>
+
+  <!-- ESTIMASI -->
+  <div class="summary-card">
+    <h3>⏱ Estimasi Pesanan</h3>
+
+    <div class="summary-row">
+      <span>Waktu rata-rata</span>
+      <span>8 Menit</span>
+    </div>
+
+    <div class="summary-row">
+      <span>Antrian (4 Pesanan)</span>
+      <span>12 Menit</span>
+    </div>
+
+    <div class="summary-total">
+      <div class="summary-row">
+        <span>Total Estimasi</span>
+        <span id="totalWaktu">0 Menit</span>
+      </div>
+    </div>
+
+    <div class="warning">
+      ⚠️ Estimasi bisa berubah tergantung kondisi dapur
+    </div>
+  </div>
+
+  <!-- RINGKASAN BIAYA -->
+  <div class="summary-card">
+    <h3>💰 Ringkasan Biaya</h3>
+
+    <div class="summary-row">
+      <span>Sub Total</span>
+      <span id="subtotal">Rp 0</span>
+    </div>
+
+    <div class="summary-row">
+      <span>Biaya Layanan</span>
+      <span>Rp 1.000</span>
+    </div>
+
+    <div class="summary-total">
+      <div class="summary-row">
+        <span>Total Pembayaran</span>
+        <span id="total">Rp 0</span>
+      </div>
+    </div>
+
+    <button class="checkout-btn" onclick="pesanSekarang()">
+      Pesan Sekarang →
+    </button>
+  </div>
+
+</div>
+
+<!-- FIX JS -->
+<script src="/views/pelanggan/keranjang.js"></script>
+
+</body>
+</html>

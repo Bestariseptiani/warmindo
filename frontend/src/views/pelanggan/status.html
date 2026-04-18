@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Pesanan</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="status-container">
+  <div class="status-header">
+    <div>
+      <h2>⏱ Estimasi Pemesanan</h2>
+      <div class="order-id">Order ID: #WM-<span id="orderId"></span></div>
+    </div>
+    <div class="status-badge" id="liveBadge">Sedang Diproses</div>
+  </div>
+
+  <div class="timer-box status-hero">
+    <p class="timer-label">SIAP DALAM WAKTU</p>
+    <h1 id="timer">15:00</h1>
+    <small>Menit : Detik</small>
+  </div>
+
+  <div class="summary-card progress-card">
+    <div class="progress-text">
+      <span id="statusText">Sedang dimasak</span>
+      <span id="progressPercent">0%</span>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="summary-card timeline-card">
+    <h3>📍 Status Pesanan</h3>
+    <div class="timeline">
+      <div class="step active">✔ Pesanan diterima</div>
+      <div class="step active">🍳 Sedang dimasak</div>
+      <div class="step">🚚 Siap diantar</div>
+      <div class="step">⭐ Selesai</div>
+    </div>
+  </div>
+
+  <div class="summary-card order-detail-card">
+    <h3>🧾 Detail Pesanan</h3>
+    <div id="detailList"></div>
+    <hr>
+    <div class="summary-row total-row">
+      <b>Total</b>
+      <b id="totalAkhir">Rp 0</b>
+    </div>
+  </div>
+</div>
+
+<script src="status.js"></script>
+</body>
+</html>
