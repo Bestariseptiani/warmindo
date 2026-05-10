@@ -25,12 +25,29 @@
       <h2>📊 Table & QR Management</h2>
       <p class="page-desc">Kelola QR meja dan konfirmasi pembayaran per meja.</p>
 
-      <input type="text" placeholder="Cari meja..." id="searchMeja" onkeyup="renderMeja()" />
+      <div style="margin: 16px 0; display: flex; gap: 12px; flex-wrap: wrap;">
+        <input
+          type="text"
+          placeholder="Cari meja..."
+          id="searchMeja"
+          onkeyup="renderMeja()"
+        />
+
+        <button onclick="generateAllQR()">Generate All QR</button>
+      </div>
 
       <div class="stats" id="mejaSummary"></div>
 
       <div class="meja-grid" id="mejaContainer"></div>
     </main>
+  </div>
+
+  <div id="mejaPenuhOverlay" class="meja-penuh-overlay hidden">
+    <div class="meja-penuh-popup">
+      <h2>⚠️ Semua Meja Penuh</h2>
+      <p>Mohon tunggu sampai ada meja yang tersedia.</p>
+      <button onclick="tutupPeringatanMeja()">Tutup</button>
+    </div>
   </div>
 
   <script src="/views/admin/meja.js"></script>

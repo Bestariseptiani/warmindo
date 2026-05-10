@@ -28,12 +28,10 @@ const detailListEl = document.getElementById("detailList");
 const liveBadgeEl = document.getElementById("liveBadge");
 const stepEls = document.querySelectorAll(".timeline .step");
 
-const lastOrderId =
-  params.get("orderId") ||
-  getStorage("lastOrderId", "");
+const lastOrderId = params.get("orderId") || getStorage("lastOrderId", "");
 
 let savedItems = JSON.parse(getStorage("lastOrderItems", "[]")) || [];
-const savedTotalWaktu = Number(getStorage("lastOrderTotalWaktu", "15"));
+let savedTotalWaktu = Number(getStorage("lastOrderTotalWaktu", "15"));
 
 let time = Math.max(savedTotalWaktu * 60, 0);
 let currentProgress = 0;
@@ -91,7 +89,7 @@ function renderDetailPesanan() {
 
   detailListEl.innerHTML = savedItems.map((item) => {
     const qty = Number(item.qty || 0);
-    const subtotal = Number(item.subtotal || 0);
+    const subtotal = Number(item.subtotal || (Number(item.harga || 0) * qty));
     totalHarga += subtotal;
 
     return `
@@ -113,6 +111,19 @@ function renderDetailPesanan() {
   `;
 }
 
+function clearOrderStorage() {
+  [
+    "paymentConfirmed",
+    "metodeBayar",
+    "lastOrderId",
+    "lastOrderItems",
+    "lastOrderTotalWaktu",
+    "lastOrderMeja",
+    "cart",
+    "orderData"
+  ].forEach(removeStorage);
+}
+
 function showSiapNotificationAndRedirect() {
   if (sudahNotifSiap) return;
   sudahNotifSiap = true;
@@ -123,12 +134,7 @@ function showSiapNotificationAndRedirect() {
     sudahRedirect = true;
 
     setTimeout(() => {
-      removeStorage("paymentConfirmed");
-      removeStorage("metodeBayar");
-      removeStorage("lastOrderId");
-      removeStorage("lastOrderItems");
-      removeStorage("lastOrderTotalWaktu");
-      removeStorage("lastOrderMeja");
+      clearOrderStorage();
       window.location.href = `/?meja=${nomorMeja}`;
     }, 3000);
   }
@@ -206,9 +212,8 @@ async function syncOrderStatus() {
     const res = await fetch(`/api/orders/${lastOrderId}`, {
       method: "GET",
       cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache"
-      }
+      headers: { "Cache-Control": "no-cache" },
+      credentials: "include"
     });
 
     const data = await res.json();
@@ -220,12 +225,11 @@ async function syncOrderStatus() {
     const paymentStatus = String(data.payment_status || "").toLowerCase();
     const orderStatus = String(data.status || "").toLowerCase();
 
+    // Halaman timer hanya boleh dibuka setelah admin menyetujui pembayaran.
     if (paymentStatus !== "sudah_bayar") {
-      const paymentConfirmed = getStorage("paymentConfirmed", "false");
-      if (paymentConfirmed !== "true") {
-        window.location.href = `/views/pelanggan/payment.html?meja=${nomorMeja}`;
-        return;
-      }
+      setStorage("paymentConfirmed", "false");
+      window.location.href = `/views/pelanggan/payment.html?meja=${nomorMeja}`;
+      return;
     }
 
     setStorage("paymentConfirmed", "true");
@@ -239,6 +243,7 @@ async function syncOrderStatus() {
     }
 
     if (data.total_waktu) {
+      savedTotalWaktu = Number(data.total_waktu);
       setStorage("lastOrderTotalWaktu", String(data.total_waktu));
     }
 

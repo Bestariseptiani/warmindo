@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ================= ROUTES API =================
-const authRoutes = require("./src/routes/authRoutes");
+const authRoutes = require("../../src/routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
 // ================= ROUTES HALAMAN =================

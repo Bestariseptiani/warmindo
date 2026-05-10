@@ -15,6 +15,21 @@
   <div class="meja-info" id="mejaInfo">Meja #1</div>
 </header>
 
+<!-- INI TEMPAT NOTIF ANTREAN DAPUR -->
+<div
+  id="kitchen-warning"
+  style="
+    display: none;
+    margin: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    background: #fff3cd;
+    color: #000;
+    font-weight: 600;
+    text-align: center;
+  "
+></div>
+
 <div class="search-box">
   <input type="text" id="searchInput" placeholder="Cari menu..." onkeyup="cariMenu()">
 </div>
@@ -34,6 +49,48 @@
 
 <!-- FIX JS -->
 <script src="/js/script.js"></script>
+
+<!-- CEK STATUS DAPUR INDOMIE -->
+<script>
+  fetch("/api/kitchen/indomie-status?qty=1")
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+
+      const banner = document.getElementById("kitchen-warning");
+
+      if (!banner) return;
+
+      // Kalau dapur normal, banner tidak muncul
+      if (data.status === "normal" || data.estimatedMinutes <= 6) {
+        banner.style.display = "none";
+        banner.innerText = "";
+        return;
+      }
+
+      // Kalau antre, warning, atau penuh, banner muncul
+      banner.innerText = data.message;
+      banner.style.display = "block";
+
+      if (data.status === "queue") {
+        banner.style.background = "#d1ecf1";
+        banner.style.color = "#0c5460";
+      }
+
+      if (data.status === "warning") {
+        banner.style.background = "#fff3cd";
+        banner.style.color = "#000";
+      }
+
+      if (data.status === "closed_temporarily") {
+        banner.style.background = "#f8d7da";
+        banner.style.color = "#721c24";
+      }
+    })
+    .catch((err) => {
+      console.error("Gagal ambil status dapur:", err);
+    });
+</script>
 
 </body>
 </html>

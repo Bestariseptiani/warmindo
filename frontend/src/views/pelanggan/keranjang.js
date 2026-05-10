@@ -23,34 +23,16 @@ function setJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function removeKey(key) {
+  localStorage.removeItem(key);
+}
+
 function getCart() {
-  const cartPerMeja = getJSON(mejaKey("cart"), null);
-  if (Array.isArray(cartPerMeja) && cartPerMeja.length > 0) {
-    return cartPerMeja;
-  }
-
-  const cartGlobal = getJSON("cart", []);
-  if (Array.isArray(cartGlobal) && cartGlobal.length > 0) {
-    setJSON(mejaKey("cart"), cartGlobal);
-    return cartGlobal;
-  }
-
-  return [];
+  return getJSON(mejaKey("cart"), []);
 }
 
 function getMenuData() {
-  const menuPerMeja = getJSON(mejaKey("menuData"), null);
-  if (Array.isArray(menuPerMeja) && menuPerMeja.length > 0) {
-    return menuPerMeja;
-  }
-
-  const menuGlobal = getJSON("menuData", []);
-  if (Array.isArray(menuGlobal) && menuGlobal.length > 0) {
-    setJSON(mejaKey("menuData"), menuGlobal);
-    return menuGlobal;
-  }
-
-  return [];
+  return getJSON(mejaKey("menuData"), []);
 }
 
 let cart = getCart();
@@ -67,6 +49,7 @@ function getMenuById(id) {
 function syncStorage() {
   setJSON(mejaKey("cart"), cart);
   setJSON(mejaKey("menuData"), menuData);
+  localStorage.setItem("active_meja", nomorMeja);
 }
 
 function renderKeranjang() {
@@ -76,6 +59,9 @@ function renderKeranjang() {
   menuData = getMenuData();
 
   container.innerHTML = "";
+
+  totalHarga = 0;
+  totalWaktu = 0;
 
   if (!Array.isArray(cart) || cart.length === 0) {
     container.innerHTML = `
@@ -90,13 +76,10 @@ function renderKeranjang() {
     const totalWaktuEl = document.getElementById("totalWaktu");
 
     if (subtotalEl) subtotalEl.innerText = formatRupiah(0);
-    if (totalEl) totalEl.innerText = formatRupiah(1000);
+    if (totalEl) totalEl.innerText = formatRupiah(0);
     if (totalWaktuEl) totalWaktuEl.innerText = "0 Menit";
     return;
   }
-
-  totalHarga = 0;
-  totalWaktu = 0;
 
   cart.forEach((item) => {
     const menu = getMenuById(item.id);
@@ -164,12 +147,16 @@ function kurang(id) {
 }
 
 function pesanSekarang() {
+  cart = getCart();
+
   if (!Array.isArray(cart) || cart.length === 0) {
     alert("Keranjang masih kosong!");
     return;
   }
 
   setJSON(mejaKey("orderData"), cart);
+  localStorage.setItem("active_meja", nomorMeja);
+
   window.location.href = `/views/pelanggan/payment.html?meja=${nomorMeja}`;
 }
 

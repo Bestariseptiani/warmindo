@@ -42,7 +42,9 @@ function getMeja() {
 
   localStorage.setItem("active_meja", nomorMeja);
 
-  cart = JSON.parse(getStorage("cart", "[]")) || [];
+  // RESET CART setiap kali halaman menu diakses / QR discan ulang
+  removeStorage("cart");
+  cart = [];
 }
 
 // ===== LOAD MENU DARI DATABASE =====

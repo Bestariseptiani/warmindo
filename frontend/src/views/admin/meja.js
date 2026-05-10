@@ -8,6 +8,22 @@ function goTo(page) {
   if (page === "laporan") window.location.href = "/laporan";
 }
 
+function showPeringatanMejaPenuh() {
+  const overlay = document.getElementById("mejaPenuhOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("hidden");
+}
+
+function hidePeringatanMejaPenuh() {
+  const overlay = document.getElementById("mejaPenuhOverlay");
+  if (!overlay) return;
+  overlay.classList.add("hidden");
+}
+
+function tutupPeringatanMeja() {
+  hidePeringatanMejaPenuh();
+}
+
 function logout() {
   fetch("/api/auth/logout", {
     method: "POST",
@@ -17,10 +33,74 @@ function logout() {
   });
 }
 
+function isOrderAktif(order) {
+  if (!order) return false;
+
+  const status = String(order.status || "").toLowerCase();
+
+  // Meja dianggap terisi selama order belum selesai / ditolak / dibatalkan
+  return (
+    status !== "selesai" &&
+    status !== "ditolak" &&
+    status !== "dibatalkan" &&
+    status !== "cancelled"
+  );
+}
+
+function getOrdersByMeja(no) {
+  const grouped = {};
+
+  orderData.forEach((item) => {
+    if (Number(item.meja) !== Number(no)) return;
+
+    if (!grouped[item.order_id]) {
+      grouped[item.order_id] = {
+        order_id: item.order_id,
+        meja: item.meja,
+        status: item.status,
+        payment_status: item.payment_status,
+        payment_method: item.payment_method,
+        total_harga: item.total_harga,
+        total_waktu: item.total_waktu,
+        created_at: item.created_at,
+        items: []
+      };
+    }
+
+    grouped[item.order_id].items.push(item);
+  });
+
+  return Object.values(grouped).sort((a, b) => {
+    return Number(b.order_id) - Number(a.order_id);
+  });
+}
+
+function getLatestOrderByMeja(no) {
+  const orders = getOrdersByMeja(no);
+  return orders[0] || null;
+}
+
+function getActiveOrderByMeja(no) {
+  const orders = getOrdersByMeja(no);
+  return orders.find((order) => isOrderAktif(order)) || null;
+}
+
+function isMejaTerisi(noMeja) {
+  const activeOrder = getActiveOrderByMeja(noMeja);
+  return isOrderAktif(activeOrder);
+}
+
 function getRingkasanMeja() {
   const total = mejaData.length;
-  const terisi = mejaData.filter((m) => m.status === "terisi").length;
-  const tersedia = mejaData.filter((m) => m.status === "tersedia").length;
+
+  const terisi = mejaData.filter((m) => {
+    return m.qr && isMejaTerisi(m.no);
+  }).length;
+
+  const tersedia = mejaData.filter((m) => {
+    return m.qr && !isMejaTerisi(m.no);
+  }).length;
+
   const belumQR = mejaData.filter((m) => !m.qr).length;
   const overload = total > 0 && terisi >= total;
 
@@ -59,33 +139,12 @@ function renderSummary() {
       <h2>${overload ? "PENUH" : "AMAN"}</h2>
     </div>
   `;
-}
 
-function getLatestOrderByMeja(no) {
-  const grouped = {};
-
-  orderData.forEach((item) => {
-    if (Number(item.meja) !== Number(no)) return;
-
-    if (!grouped[item.order_id]) {
-      grouped[item.order_id] = {
-        order_id: item.order_id,
-        meja: item.meja,
-        status: item.status,
-        payment_status: item.payment_status,
-        payment_method: item.payment_method,
-        total_harga: item.total_harga,
-        total_waktu: item.total_waktu,
-        created_at: item.created_at,
-        items: []
-      };
-    }
-
-    grouped[item.order_id].items.push(item);
-  });
-
-  const orders = Object.values(grouped).sort((a, b) => b.order_id - a.order_id);
-  return orders[0] || null;
+  if (overload) {
+    showPeringatanMejaPenuh();
+  } else {
+    hidePeringatanMejaPenuh();
+  }
 }
 
 function renderMeja() {
@@ -111,21 +170,24 @@ function renderMeja() {
   }
 
   filteredMeja.forEach((meja) => {
+    const activeOrder = getActiveOrderByMeja(meja.no);
+    const latestOrder = getLatestOrderByMeja(meja.no);
+    const mejaTerisi = isOrderAktif(activeOrder);
+
     let statusText = "";
     let statusClass = "";
 
     if (!meja.qr) {
       statusText = "QR BELUM ADA";
       statusClass = "qr-missing";
-    } else if (meja.status === "terisi") {
-      statusText = "TERISI";
+    } else if (mejaTerisi) {
+      statusText = "TERISI - ADA ORDER AKTIF";
       statusClass = "occupied";
     } else {
       statusText = "TERSEDIA";
       statusClass = "available";
     }
 
-    const activeOrder = getLatestOrderByMeja(meja.no);
     let paymentInfoHtml = "";
 
     if (activeOrder) {
@@ -134,6 +196,7 @@ function renderMeja() {
 
       paymentInfoHtml = `
         <div class="meja-order-info">
+          <p style="color:#ef4444; font-weight:700;">Meja ini sedang terisi</p>
           <p><b>Order ID:</b> #${activeOrder.order_id}</p>
           <p><b>Status Order:</b> ${activeOrder.status || "-"}</p>
           <p><b>Metode Bayar:</b> ${activeOrder.payment_method || "-"}</p>
@@ -147,9 +210,13 @@ function renderMeja() {
             onclick="konfirmasiBayar(${activeOrder.order_id})"
             ${paymentDone ? "disabled" : ""}
           >
-            ${paymentDone ? "Sudah Dibayar" : "Sudah Bayar"}
+            ${paymentDone ? "Sudah Dibayar" : "Setujui Pembayaran"}
           </button>
         </div>
+      `;
+    } else if (latestOrder && !isOrderAktif(latestOrder)) {
+      paymentInfoHtml = `
+        <p class="mini-text">Meja kosong / order terakhir sudah selesai</p>
       `;
     } else {
       paymentInfoHtml = `
@@ -195,12 +262,15 @@ async function loadMeja() {
     renderMeja();
   } catch (err) {
     console.error("LOAD MEJA ERROR:", err);
-    container.innerHTML = `
-      <div class="empty-state">
-        <h3>Gagal mengambil data meja</h3>
-        <p>${err.message}</p>
-      </div>
-    `;
+
+    if (container) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>Gagal mengambil data meja</h3>
+          <p>${err.message}</p>
+        </div>
+      `;
+    }
   }
 }
 
@@ -275,7 +345,32 @@ async function generateQR(no) {
     alert(`QR meja ${no} berhasil dibuat`);
     await loadMeja();
   } catch (err) {
-    alert(err.message);
+    console.error("GENERATE QR ERROR:", err);
+    alert(err.message || "Terjadi kesalahan saat generate QR");
+  }
+}
+
+async function generateAllQR() {
+  try {
+    const res = await fetch("/api/meja/generate-all", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Gagal generate semua QR");
+    }
+
+    alert(data.message);
+    await loadMeja();
+  } catch (err) {
+    console.error("GENERATE ALL QR ERROR:", err);
+    alert(err.message || "Terjadi kesalahan saat generate semua QR");
   }
 }
 

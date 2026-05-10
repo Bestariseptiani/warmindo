@@ -9,6 +9,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const menuRoutes = require("./src/routes/menuRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
 const mejaRoutes = require("./src/routes/mejaRoutes");
+const kitchenRoutes = require("./src/routes/kitchenRoutes");
 
 // ================= MIDDLEWARE =================
 app.use(cors({
@@ -51,6 +52,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/meja", mejaRoutes);
+app.use("/api/kitchen", kitchenRoutes);
 
 // ================= PAGES =================
 app.get("/", (req, res) => {

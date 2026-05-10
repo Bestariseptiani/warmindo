@@ -3,7 +3,6 @@
     "development"
   ],
   "hints": {
-    "meta-viewport": "off",
     "axe/forms": [
       "default",
       {

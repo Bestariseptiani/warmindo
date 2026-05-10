@@ -40,42 +40,18 @@ function removeValue(key) {
 }
 
 function getCart() {
-  const cartPerMeja = getJSON(mejaKey("cart"), null);
-  if (Array.isArray(cartPerMeja) && cartPerMeja.length > 0) return cartPerMeja;
-
-  const cartGlobal = getJSON("cart", []);
-  if (Array.isArray(cartGlobal) && cartGlobal.length > 0) {
-    setJSON(mejaKey("cart"), cartGlobal);
-    return cartGlobal;
-  }
-
-  return [];
+  return getJSON(mejaKey("cart"), []);
 }
 
 function getOrderData() {
-  const orderPerMeja = getJSON(mejaKey("orderData"), null);
-  if (Array.isArray(orderPerMeja) && orderPerMeja.length > 0) return orderPerMeja;
+  const orderData = getJSON(mejaKey("orderData"), []);
+  if (Array.isArray(orderData) && orderData.length > 0) return orderData;
 
-  const orderGlobal = getJSON("orderData", []);
-  if (Array.isArray(orderGlobal) && orderGlobal.length > 0) {
-    setJSON(mejaKey("orderData"), orderGlobal);
-    return orderGlobal;
-  }
-
-  return [];
+  return getCart();
 }
 
 function getMenuData() {
-  const menuPerMeja = getJSON(mejaKey("menuData"), null);
-  if (Array.isArray(menuPerMeja) && menuPerMeja.length > 0) return menuPerMeja;
-
-  const menuGlobal = getJSON("menuData", []);
-  if (Array.isArray(menuGlobal) && menuGlobal.length > 0) {
-    setJSON(mejaKey("menuData"), menuGlobal);
-    return menuGlobal;
-  }
-
-  return [];
+  return getJSON(mejaKey("menuData"), []);
 }
 
 function formatRupiah(angka) {
@@ -83,9 +59,19 @@ function formatRupiah(angka) {
 }
 
 function getCurrentItems() {
-  const orderData = getOrderData();
-  if (Array.isArray(orderData) && orderData.length > 0) return orderData;
-  return getCart();
+  return getOrderData();
+}
+
+function bersihkanOrderLama() {
+  removeValue(mejaKey("lastOrderId"));
+  removeValue(mejaKey("lastOrderItems"));
+  removeValue(mejaKey("lastOrderTotalWaktu"));
+  removeValue(mejaKey("lastOrderMeja"));
+  removeValue(mejaKey("paymentConfirmed"));
+
+  orderSudahAda = false;
+  orderSedangDibuat = false;
+  redirectSedangJalan = false;
 }
 
 function hitungTotal() {
@@ -97,6 +83,7 @@ function hitungTotal() {
   items.forEach((item) => {
     const menu = menuData.find((m) => Number(m.id) === Number(item.id));
     if (!menu) return;
+
     total += Number(menu.harga || 0) * Number(item.qty || 0);
   });
 
@@ -107,52 +94,46 @@ function hitungTotal() {
   }
 }
 
-function renderRingkasanPesanan() {
-  if (!detailEl) return;
-
+function buatItemsHtml() {
   const items = getCurrentItems();
   const menuData = getMenuData();
-
-  if (!Array.isArray(items) || items.length === 0) {
-    detailEl.innerHTML = `
-      <div class="summary-card">
-        <h3>🧾 Pesanan Kamu</h3>
-        <p>Belum ada item pesanan.</p>
-      </div>
-    `;
-    return;
-  }
 
   let total = 0;
 
   const itemsHtml = items.map((item) => {
     const menu = menuData.find((m) => Number(m.id) === Number(item.id));
-    if (!menu) return "";
 
+    const namaMenu = menu ? menu.nama : `Menu ID ${item.id}`;
+    const harga = menu ? Number(menu.harga || 0) : 0;
     const qty = Number(item.qty || 0);
-    const subtotal = Number(menu.harga || 0) * qty;
+    const subtotal = harga * qty;
+
     total += subtotal;
 
     return `
       <div class="detail-item">
         <div>
-          <strong>${menu.nama}</strong><br>
-          <small>${qty} x ${formatRupiah(menu.harga)}</small>
+          <strong>${namaMenu}</strong><br>
+          <small>${qty} x ${formatRupiah(harga)}</small>
         </div>
         <div>${formatRupiah(subtotal)}</div>
       </div>
     `;
   }).join("");
 
-  detailEl.innerHTML = `
+  return `
     <div class="summary-card">
       <h3>🧾 Pesanan Kamu</h3>
-      ${itemsHtml}
+
+      ${itemsHtml || "<p>Belum ada item pesanan.</p>"}
+
       <hr>
+
       <div class="detail-item">
         <strong>Biaya layanan</strong>
         <strong>${formatRupiah(1000)}</strong>
       </div>
+
       <div class="detail-item total-row">
         <strong>Total</strong>
         <strong>${formatRupiah(total + 1000)}</strong>
@@ -161,84 +142,119 @@ function renderRingkasanPesanan() {
   `;
 }
 
-function renderMetode(metode) {
-  const items = getCurrentItems();
-  const menuData = getMenuData();
+function renderRingkasanPesanan() {
+  if (!detailEl) return;
+  detailEl.innerHTML = buatItemsHtml();
+}
 
-  let total = 0;
-
-  const itemsHtml = items.map((item) => {
-    const menu = menuData.find((m) => Number(m.id) === Number(item.id));
-    if (!menu) return "";
-
-    const qty = Number(item.qty || 0);
-    const subtotal = Number(menu.harga || 0) * qty;
-    total += subtotal;
-
-    return `
-      <div class="detail-item">
-        <div>
-          <strong>${menu.nama}</strong><br>
-          <small>${qty} x ${formatRupiah(menu.harga)}</small>
-        </div>
-        <div>${formatRupiah(subtotal)}</div>
-      </div>
-    `;
-  }).join("");
+function renderMetode(metode, mode = "waiting") {
+  if (!detailEl) return;
 
   let metodeHtml = "";
 
-  if (metode === "kasir") {
+  if (mode === "creating") {
+    metodeHtml = `
+      <div class="summary-card">
+        <h3>⏳ Membuat Pesanan</h3>
+        <p>Sedang mengirim pesanan ke admin...</p>
+      </div>
+    `;
+  } else if (metode === "kasir") {
     metodeHtml = `
       <div class="summary-card">
         <h3>💵 Bayar di Kasir</h3>
         <p>Silakan lakukan pembayaran ke kasir.</p>
-        <p>Setelah dibayar, admin akan menekan tombol <b>Sudah Bayar</b>.</p>
-        <p><b>Menunggu konfirmasi admin.</b></p>
+        <p>Setelah dibayar, admin harus menekan tombol <b>Setujui Pembayaran</b>.</p>
+        <p><b>Menunggu persetujuan admin...</b></p>
       </div>
     `;
   } else if (metode === "qris") {
     metodeHtml = `
       <div class="summary-card">
         <h3>📱 QRIS</h3>
+
         <img
           src="/assets/images/QRIS.jpg"
           alt="QRIS"
           style="max-width:220px; width:100%; border-radius:12px; margin:12px 0;"
         />
+
         <p>Scan QR untuk membayar.</p>
-        <p><b>Menunggu konfirmasi admin.</b></p>
+        <p>Setelah dibayar, admin harus menekan tombol <b>Setujui Pembayaran</b>.</p>
+        <p><b>Menunggu persetujuan admin...</b></p>
       </div>
     `;
   }
 
-  detailEl.innerHTML = `
-    <div class="summary-card">
-      <h3>🧾 Pesanan Kamu</h3>
-      ${itemsHtml}
-      <hr>
-      <div class="detail-item">
-        <strong>Biaya layanan</strong>
-        <strong>${formatRupiah(1000)}</strong>
-      </div>
-      <div class="detail-item total-row">
-        <strong>Total</strong>
-        <strong>${formatRupiah(total + 1000)}</strong>
-      </div>
-    </div>
-    ${metodeHtml}
-  `;
+  detailEl.innerHTML = buatItemsHtml() + metodeHtml;
+}
+
+async function ambilOrderServer(orderId) {
+  try {
+    if (!orderId) return null;
+
+    const res = await fetch(`/api/orders/${orderId}?_=${Date.now()}`, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        "Cache-Control": "no-cache"
+      }
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("CEK ORDER SERVER ERROR:", err);
+    return null;
+  }
 }
 
 async function pilihMetode(metode) {
-  setValue(mejaKey("metodeBayar"), metode);
-  renderMetode(metode);
+  if (orderSedangDibuat) return;
 
-  if (!orderSudahAda && !orderSedangDibuat) {
-    await buatOrder(metode);
-  } else {
-    mulaiCekPembayaran();
+  const items = getCurrentItems();
+
+  if (!Array.isArray(items) || items.length === 0) {
+    alert("Pesanan masih kosong. Silakan pilih menu dulu.");
+    window.location.href = `/?meja=${nomorMeja}`;
+    return;
   }
+
+  setValue(mejaKey("metodeBayar"), metode);
+
+  const lastOrderId = getValue(mejaKey("lastOrderId"), "");
+  const lastOrderMeja = getValue(mejaKey("lastOrderMeja"), "");
+
+  if (lastOrderId && lastOrderMeja === String(nomorMeja)) {
+    const orderServer = await ambilOrderServer(lastOrderId);
+
+    if (orderServer) {
+      const status = String(orderServer.status || "").toLowerCase();
+      const paymentStatus = String(orderServer.payment_status || "").toLowerCase();
+
+      if (status !== "selesai" && status !== "ditolak") {
+        orderSudahAda = true;
+
+        if (paymentStatus === "sudah_bayar") {
+          redirectKeStatus();
+          return;
+        }
+
+        renderMetode(metode, "waiting");
+        mulaiCekPembayaran();
+        return;
+      }
+    }
+  }
+
+  bersihkanOrderLama();
+  setValue(mejaKey("metodeBayar"), metode);
+
+  renderMetode(metode, "creating");
+  await buatOrder(metode);
 }
 
 async function buatOrder(metode) {
@@ -246,16 +262,24 @@ async function buatOrder(metode) {
     const order = getCurrentItems();
 
     if (!Array.isArray(order) || order.length === 0) {
-      throw new Error("Order kosong");
+      throw new Error("Order kosong. Silakan pilih menu dulu.");
     }
 
     orderSedangDibuat = true;
+
+    console.log("KIRIM ORDER KE SERVER:", {
+      meja: nomorMeja,
+      items: order,
+      payment_method: metode
+    });
 
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
+      cache: "no-store",
+      credentials: "include",
       body: JSON.stringify({
         meja: nomorMeja,
         items: order,
@@ -263,11 +287,20 @@ async function buatOrder(metode) {
       })
     });
 
-    const data = await res.json();
+    const text = await res.text();
+
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Response server bukan JSON: ${text.substring(0, 150)}`);
+    }
 
     if (!res.ok) {
       throw new Error(data.message || "Gagal membuat order");
     }
+
+    console.log("ORDER BERHASIL MASUK:", data);
 
     setValue(mejaKey("lastOrderId"), String(data.order_id));
     setJSON(mejaKey("lastOrderItems"), order);
@@ -278,10 +311,27 @@ async function buatOrder(metode) {
     orderSudahAda = true;
     orderSedangDibuat = false;
 
+    renderMetode(metode, "waiting");
+
+    alert(`Order #${data.order_id} berhasil masuk ke admin. Menunggu persetujuan pembayaran.`);
+
     mulaiCekPembayaran();
   } catch (err) {
     orderSedangDibuat = false;
+    orderSudahAda = false;
+
     console.error("GAGAL BUAT ORDER:", err);
+
+    if (detailEl) {
+      detailEl.innerHTML = buatItemsHtml() + `
+        <div class="summary-card">
+          <h3>❌ Gagal Membuat Pesanan</h3>
+          <p>${err.message || "Gagal membuat order"}</p>
+          <button onclick="window.location.reload()">Coba Lagi</button>
+        </div>
+      `;
+    }
+
     alert(err.message || "Gagal membuat order");
   }
 }
@@ -295,8 +345,8 @@ function stopCekPembayaran() {
 
 function redirectKeStatus() {
   if (redirectSedangJalan) return;
-  redirectSedangJalan = true;
 
+  redirectSedangJalan = true;
   stopCekPembayaran();
 
   removeValue(mejaKey("cart"));
@@ -304,6 +354,7 @@ function redirectKeStatus() {
   setValue(mejaKey("paymentConfirmed"), "true");
 
   const orderId = getValue(mejaKey("lastOrderId"), "");
+
   window.location.href = `/views/pelanggan/status.html?meja=${nomorMeja}&orderId=${orderId}`;
 }
 
@@ -312,16 +363,11 @@ async function cekPembayaranSekali() {
     const orderId = getValue(mejaKey("lastOrderId"), "");
     if (!orderId) return;
 
-    const res = await fetch(`/api/orders/${orderId}`, {
-      method: "GET",
-      cache: "no-store",
-      headers: { "Cache-Control": "no-cache" }
-    });
+    const data = await ambilOrderServer(orderId);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || "Gagal cek pembayaran");
+    if (!data) {
+      console.warn("Order tidak ditemukan di server:", orderId);
+      return;
     }
 
     if (String(data.payment_status || "").toLowerCase() === "sudah_bayar") {
@@ -335,22 +381,37 @@ async function cekPembayaranSekali() {
 
 function mulaiCekPembayaran() {
   stopCekPembayaran();
+
   cekPembayaranSekali();
-  intervalCek = setInterval(cekPembayaranSekali, 1500);
+
+  intervalCek = setInterval(() => {
+    cekPembayaranSekali();
+  }, 1500);
 }
 
-function restoreStateSaatReload() {
+async function restoreStateSaatReload() {
   const lastOrderId = getValue(mejaKey("lastOrderId"), "");
   const metodeBayar = getValue(mejaKey("metodeBayar"), "");
   const lastOrderMeja = getValue(mejaKey("lastOrderMeja"), "");
   const paymentConfirmed = getValue(mejaKey("paymentConfirmed"), "false");
 
-  if (!lastOrderId) {
+  if (!lastOrderId || lastOrderMeja !== String(nomorMeja)) {
     renderRingkasanPesanan();
     return;
   }
 
-  if (lastOrderMeja !== String(nomorMeja)) {
+  const orderServer = await ambilOrderServer(lastOrderId);
+
+  if (!orderServer) {
+    bersihkanOrderLama();
+    renderRingkasanPesanan();
+    return;
+  }
+
+  const status = String(orderServer.status || "").toLowerCase();
+
+  if (status === "selesai" || status === "ditolak") {
+    bersihkanOrderLama();
     renderRingkasanPesanan();
     return;
   }
@@ -358,12 +419,15 @@ function restoreStateSaatReload() {
   orderSudahAda = true;
 
   if (metodeBayar) {
-    renderMetode(metodeBayar);
+    renderMetode(metodeBayar, "waiting");
   } else {
     renderRingkasanPesanan();
   }
 
-  if (paymentConfirmed === "true") {
+  if (
+    paymentConfirmed === "true" ||
+    String(orderServer.payment_status || "").toLowerCase() === "sudah_bayar"
+  ) {
     redirectKeStatus();
     return;
   }
