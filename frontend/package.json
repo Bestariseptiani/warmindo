@@ -1,16 +1,18 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Warmindo QR Order System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
